@@ -10,6 +10,12 @@ html, body {
   background-color: #0a192f; 
 }
 
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column; 
+}
+
 *:focus {
   outline: none !important;
 }
