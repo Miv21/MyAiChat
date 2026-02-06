@@ -1,30 +1,37 @@
-import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
+import { groq } from '@ai-sdk/groq';
+import { streamText, convertToCoreMessages } from 'ai';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    // 1. Получаем данные из запроса. 
+    // Оставляем messages без явного указания CoreMessage[], чтобы избежать конфликта
+    const { messages } = await req.json();
 
-    const chatCompletion = await groq.chat.completions.create({
-      // Модель Llama 3.3 70B — очень мощная и бесплатная на Groq
-      messages: [
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
+    // 2. Используем актуальную модель Llama 3.1
+    const result = await streamText({
+      model: groq('llama-3.1-8b-instant'),
+      // convertToCoreMessages сама превратит входящие данные в нужный формат CoreMessage[]
+      messages: convertToCoreMessages(messages),
     });
 
-    const reply = chatCompletion.choices[0]?.message?.content || "";
-
-    return NextResponse.json({ text: reply });
-  } catch (error) {
-    console.error("Groq API Error:", error);
-    return NextResponse.json({ error: "Ошибка на стороне сервера" }, { status: 500 });
+    // 3. Отправляем поток клиенту
+    return result.toDataStreamResponse();
+    
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("GROQ_SERVER_ERROR:", errorMessage);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: "Ошибка сервера", 
+        details: errorMessage 
+      }), 
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
   }
 }

@@ -1,21 +1,40 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden; 
-  background-color: #0a192f; 
+@source "../**/*.{ts,tsx}";
+
+@theme {
+  --color-background: #0a192f;
+  --color-foreground: #f8fafc;
 }
 
-body {
-  height: 100vh;
-  display: flex;
-  flex-direction: column; 
+:root {
+  background-color: #0a192f;
+  color: #f8fafc;
 }
 
-*:focus {
+/* Плавность для оверлея при открытии сайдбара */
+.fade-in-slow {
+  animation: fadeIn 1.1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Полная зачистка всех рамок выделения */
+*:focus, *:focus-visible, *:active {
   outline: none !important;
+  box-shadow: none !important;
+  ring: 0 !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
+}
+
+/* Сброс ограничений для SVG */
+button svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
 }
